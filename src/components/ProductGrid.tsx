@@ -1,34 +1,34 @@
-import deluxGifts from "@/assets/delux-gifts.jpg";
+import flowerBouquets from "@/assets/flower-bouquets.jpg";
+import comboGifts from "@/assets/combo-gifts.jpg";
+import flowerArrangements from "@/assets/flower-arrangements.jpg";
 import crystalTrays from "@/assets/crystal-trays.jpg";
-import silverTrays from "@/assets/silver-trays.jpg";
-import ceramicTrays from "@/assets/ceramic-trays.jpg";
 import chocolateBoxes from "@/assets/chocolate-boxes.jpg";
 import patisserie from "@/assets/patisserie.jpg";
 
 const categories = [
   {
     id: 1,
-    title: "DELUX GIFTS",
-    image: deluxGifts,
-    description: "Exquisite gift collections for special moments"
+    title: "FLOWER BOUQUETS",
+    image: flowerBouquets,
+    description: "Stunning fresh flower arrangements"
   },
   {
     id: 2,
-    title: "CRYSTAL TRAYS",
-    image: crystalTrays,
-    description: "Elegant crystal presentations"
+    title: "FLOWERS & CHOCOLATE",
+    image: comboGifts,
+    description: "Perfect combination gifts"
   },
   {
     id: 3,
-    title: "SILVER TRAYS",
-    image: silverTrays,
-    description: "Luxurious silver service"
+    title: "PREMIUM ARRANGEMENTS",
+    image: flowerArrangements,
+    description: "Elegant floral displays"
   },
   {
     id: 4,
-    title: "CERAMIC TRAYS",
-    image: ceramicTrays,
-    description: "Artisanal ceramic collections"
+    title: "CHOCOLATE TRAYS",
+    image: crystalTrays,
+    description: "Artisan chocolate collections"
   },
   {
     id: 5,

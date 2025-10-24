@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <h3 className="text-2xl font-playfair font-bold text-primary mb-4">HAVEN</h3>
             <p className="text-sm text-muted-foreground">
-              Indulge in elegance with our handcrafted luxury chocolates and premium gifts.
+              Beautiful flowers paired with handcrafted chocolates. The perfect gift for every occasion.
             </p>
           </div>
 
@@ -34,7 +34,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
                 <Mail className="h-4 w-4" />
-                <span>hello@havenchocolate.com</span>
+                <span>hello@havengifts.com</span>
               </li>
             </ul>
             <div className="flex gap-4 mt-4">
@@ -49,7 +49,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Haven Chocolate. All rights reserved.</p>
+          <p>&copy; 2024 Haven. All rights reserved.</p>
         </div>
       </div>
     </footer>

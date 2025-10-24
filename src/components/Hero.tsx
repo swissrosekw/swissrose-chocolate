@@ -1,4 +1,4 @@
-import heroImage from "@/assets/hero-chocolate.jpg";
+import heroImage from "@/assets/hero-flowers-chocolate.jpg";
 import { Button } from "@/components/ui/button";
 
 const Hero = () => {
@@ -15,14 +15,14 @@ const Hero = () => {
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center text-center px-4 animate-fade-in">
         <p className="text-sm tracking-[0.3em] text-primary uppercase mb-4 font-medium">
-          Haven Chocolate
+          Haven
         </p>
         <h2 className="text-5xl md:text-7xl font-playfair font-bold text-foreground mb-6 tracking-tight">
-          Indulge in Elegance
+          Flowers & Chocolates
         </h2>
         <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl">
-          Experience the finest handcrafted chocolates and premium gifts. 
-          Where luxury meets artistry.
+          Experience the finest luxury flowers paired with handcrafted chocolates. 
+          Where elegance meets indulgence.
         </p>
         <Button 
           size="lg" 
