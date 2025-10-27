@@ -1,8 +1,6 @@
 import { Instagram, Facebook, Phone, Mail } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-card border-t border-border py-12 px-4">
+  return <footer className="bg-card border-t border-border py-12 px-4">
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
@@ -34,7 +32,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
                 <Mail className="h-4 w-4" />
-                <span>hello@swissrose.com</span>
+                <span>info@swissrosekw.com</span>
               </li>
             </ul>
             <div className="flex gap-4 mt-4">
@@ -52,8 +50,6 @@ const Footer = () => {
           <p>&copy; 2024 Swiss Rose. All rights reserved.</p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
