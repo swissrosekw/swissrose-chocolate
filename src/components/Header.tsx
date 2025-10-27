@@ -8,7 +8,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-playfair font-bold text-primary">HAVEN</h1>
+            <h1 className="text-2xl font-playfair font-bold text-primary">SWISS ROSE</h1>
           </div>
 
           {/* Navigation Icons */}

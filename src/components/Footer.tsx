@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="text-2xl font-playfair font-bold text-primary mb-4">HAVEN</h3>
+            <h3 className="text-2xl font-playfair font-bold text-primary mb-4">SWISS ROSE</h3>
             <p className="text-sm text-muted-foreground">
               Beautiful flowers paired with handcrafted chocolates. The perfect gift for every occasion.
             </p>
@@ -34,7 +34,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
                 <Mail className="h-4 w-4" />
-                <span>hello@havengifts.com</span>
+                <span>hello@swissrose.com</span>
               </li>
             </ul>
             <div className="flex gap-4 mt-4">
@@ -49,7 +49,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Haven. All rights reserved.</p>
+          <p>&copy; 2024 Swiss Rose. All rights reserved.</p>
         </div>
       </div>
     </footer>

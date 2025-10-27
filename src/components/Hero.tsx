@@ -15,7 +15,7 @@ const Hero = () => {
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center text-center px-4 animate-fade-in">
         <p className="text-sm tracking-[0.3em] text-primary uppercase mb-4 font-medium">
-          Haven
+          Swiss Rose
         </p>
         <h2 className="text-5xl md:text-7xl font-playfair font-bold text-foreground mb-6 tracking-tight">
           Flowers & Chocolates
