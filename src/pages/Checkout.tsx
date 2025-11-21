@@ -1,22 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { KUWAIT_LOCATIONS, Governorate } from "@/constants/kuwaitLocations";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
+  const { settings: paymentSettings, isLoading: loadingSettings } = usePaymentSettings();
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -25,13 +30,23 @@ const Checkout = () => {
     city: "",
     address: "",
     notes: "",
+    paymentMethod: "cod",
   });
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (paymentSettings?.cash_on_delivery_enabled) {
+      setFormData(prev => ({ ...prev, paymentMethod: 'cod' }));
+    } else if (paymentSettings?.tap_payments_enabled) {
+      setFormData(prev => ({ ...prev, paymentMethod: 'tap' }));
+    }
+  }, [paymentSettings]);
 
   const cities = formData.governorate 
     ? KUWAIT_LOCATIONS[formData.governorate as Governorate] 
     : [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.fullName || !formData.phone || !formData.governorate || !formData.city || !formData.address) {
@@ -39,10 +54,66 @@ const Checkout = () => {
       return;
     }
 
-    // Here you would typically send the order to your backend
-    toast.success("Order placed successfully!");
-    clearCart();
-    navigate("/");
+    setIsProcessing(true);
+
+    try {
+      // Create order in database
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          user_id: user?.id,
+          full_name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          governorate: formData.governorate,
+          city: formData.city,
+          address: formData.address,
+          notes: formData.notes,
+          payment_method: formData.paymentMethod,
+          total_amount: totalPrice,
+          items: items as any,
+          payment_status: formData.paymentMethod === 'cod' ? 'pending' : 'processing',
+          order_status: 'pending',
+        }])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Handle payment based on method
+      if (formData.paymentMethod === 'tap' && paymentSettings?.tap_payments_enabled) {
+        const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+          'process-tap-payment',
+          {
+            body: {
+              orderId: order.id,
+              amount: totalPrice,
+              customerName: formData.fullName,
+              customerEmail: formData.email,
+              customerPhone: formData.phone,
+            },
+          }
+        );
+
+        if (paymentError) throw paymentError;
+
+        if (paymentData.paymentUrl) {
+          // Redirect to payment page
+          window.location.href = paymentData.paymentUrl;
+          return;
+        }
+      }
+
+      // For COD or after successful payment setup
+      toast.success("Order placed successfully!");
+      clearCart();
+      navigate("/");
+    } catch (error) {
+      console.error('Order error:', error);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -189,9 +260,65 @@ const Checkout = () => {
                       />
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full">
-                      Place Order
-                    </Button>
+                    {loadingSettings ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-3">
+                          <Label>Payment Method *</Label>
+                          <RadioGroup
+                            value={formData.paymentMethod}
+                            onValueChange={(value) =>
+                              setFormData({ ...formData, paymentMethod: value })
+                            }
+                          >
+                            {paymentSettings?.cash_on_delivery_enabled && (
+                              <div className="flex items-center space-x-2 border rounded-lg p-4">
+                                <RadioGroupItem value="cod" id="cod" />
+                                <Label htmlFor="cod" className="flex-1 cursor-pointer">
+                                  <div className="font-medium">Cash on Delivery</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    Pay when you receive your order
+                                  </div>
+                                </Label>
+                              </div>
+                            )}
+                            
+                            {paymentSettings?.tap_payments_enabled && (
+                              <div className="flex items-center space-x-2 border rounded-lg p-4">
+                                <RadioGroupItem value="tap" id="tap" />
+                                <Label htmlFor="tap" className="flex-1 cursor-pointer">
+                                  <div className="font-medium">Online Payment</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    Pay with KNET or Credit Card via Tap
+                                  </div>
+                                </Label>
+                              </div>
+                            )}
+                          </RadioGroup>
+                        </div>
+
+                        <Button 
+                          type="submit" 
+                          size="lg" 
+                          className="w-full"
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : formData.paymentMethod === 'tap' ? (
+                            'Proceed to Payment'
+                          ) : (
+                            'Place Order'
+                          )}
+                        </Button>
+                      </>
+                    )}
                   </form>
                 </CardContent>
               </Card>

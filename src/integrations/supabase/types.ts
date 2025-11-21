@@ -41,6 +41,93 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          address: string
+          city: string
+          created_at: string | null
+          email: string | null
+          full_name: string
+          governorate: string
+          id: string
+          items: Json
+          notes: string | null
+          order_status: string | null
+          payment_method: string
+          payment_status: string | null
+          phone: string
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string | null
+          email?: string | null
+          full_name: string
+          governorate: string
+          id?: string
+          items: Json
+          notes?: string | null
+          order_status?: string | null
+          payment_method: string
+          payment_status?: string | null
+          phone: string
+          total_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string | null
+          email?: string | null
+          full_name?: string
+          governorate?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_status?: string | null
+          payment_method?: string
+          payment_status?: string | null
+          phone?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_settings: {
+        Row: {
+          cash_on_delivery_enabled: boolean | null
+          created_at: string | null
+          id: string
+          online_payment_enabled: boolean | null
+          tap_payments_api_key: string | null
+          tap_payments_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          cash_on_delivery_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          online_payment_enabled?: boolean | null
+          tap_payments_api_key?: string | null
+          tap_payments_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          cash_on_delivery_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          online_payment_enabled?: boolean | null
+          tap_payments_api_key?: string | null
+          tap_payments_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null
