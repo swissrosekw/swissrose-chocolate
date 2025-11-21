@@ -50,9 +50,10 @@ const ProductGrid = () => {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category, index) => (
-            <div
+            <a
               key={category.id}
-              className="group relative overflow-hidden rounded-xl aspect-square cursor-pointer animate-fade-in"
+              href={`/products?category=${encodeURIComponent(category.title)}`}
+              className="group relative overflow-hidden rounded-xl aspect-square cursor-pointer animate-fade-in block"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image */}
@@ -77,7 +78,7 @@ const ProductGrid = () => {
 
               {/* Border Effect */}
               <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/50 rounded-xl transition-colors duration-300" />
-            </div>
+            </a>
           ))}
         </div>
       </div>
