@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/hooks/useCart";
 
 interface Product {
   id: string;
@@ -28,6 +29,7 @@ interface Category {
 const Products = () => {
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category");
+  const { addItem } = useCart();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -160,7 +162,17 @@ const Products = () => {
                       <span className="text-xl font-bold text-primary">
                         {product.price} KD
                       </span>
-                      <Button size="sm" className="gap-2">
+                      <Button 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => addItem({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image_url: product.image_url,
+                          category: product.categories?.name,
+                        })}
+                      >
                         <ShoppingBag className="h-4 w-4" />
                         Add to Cart
                       </Button>
