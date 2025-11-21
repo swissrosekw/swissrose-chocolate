@@ -1,10 +1,8 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-
 const About = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       <main className="pt-24 pb-16">
@@ -102,7 +100,8 @@ const About = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-2">Opening Hours</h3>
                     <p className="text-muted-foreground">
-                      Saturday - Thursday: 9:00 AM - 8:00 PM<br />
+                      Monday - Saturday: 11:00 AM - 8:00 PM
+Sunday: Closed<br />
                       Friday: 2:00 PM - 8:00 PM
                     </p>
                   </div>
@@ -115,7 +114,7 @@ const About = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-2">Phone</h3>
                     <p className="text-muted-foreground">
-                      +965 XXXX XXXX
+                      +965 22280123
                     </p>
                   </div>
                 </div>
@@ -125,7 +124,7 @@ const About = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-2">Email</h3>
                     <p className="text-muted-foreground">
-                      info@swissrose.com
+                      info@swissrosekw.com
                     </p>
                   </div>
                 </div>
@@ -136,8 +135,6 @@ const About = () => {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default About;
