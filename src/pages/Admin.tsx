@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { AdminRoute } from "@/components/AdminRoute";
 import PaymentSettings from "@/components/admin/PaymentSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,10 +181,9 @@ const Admin = () => {
       
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <AdminRoute>
-            <h1 className="text-4xl font-playfair font-bold text-primary mb-8">
-              Admin Dashboard
-            </h1>
+          <h1 className="text-4xl font-playfair font-bold text-primary mb-8">
+            Admin Dashboard
+          </h1>
 
             <Tabs defaultValue="products" className="space-y-6">
               <TabsList>
@@ -379,7 +377,6 @@ const Admin = () => {
                 <PaymentSettings />
               </TabsContent>
             </Tabs>
-          </AdminRoute>
         </div>
       </main>
 
