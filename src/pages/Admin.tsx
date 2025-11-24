@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PaymentSettings from "@/components/admin/PaymentSettings";
+import OTPManagement from "@/components/admin/OTPManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,6 +191,7 @@ const Admin = () => {
                 <TabsTrigger value="products">Products</TabsTrigger>
                 <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="otp">OTP Verifications</TabsTrigger>
                 <TabsTrigger value="payments">Payment Settings</TabsTrigger>
               </TabsList>
 
@@ -371,6 +373,10 @@ const Admin = () => {
               
               <TabsContent value="orders">
                 <p className="text-muted-foreground">Order management coming soon...</p>
+              </TabsContent>
+
+              <TabsContent value="otp">
+                <OTPManagement />
               </TabsContent>
 
               <TabsContent value="payments">
