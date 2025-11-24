@@ -98,6 +98,33 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_verifications: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          otp: string
+          phone: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          otp: string
+          phone: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          otp?: string
+          phone?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           cash_on_delivery_enabled: boolean | null
@@ -177,22 +204,55 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           created_at: string | null
           full_name: string | null
+          governorate: string | null
           id: string
           phone: string | null
         }
         Insert: {
+          city?: string | null
           created_at?: string | null
           full_name?: string | null
+          governorate?: string | null
           id: string
           phone?: string | null
         }
         Update: {
+          city?: string | null
           created_at?: string | null
           full_name?: string | null
+          governorate?: string | null
           id?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
         }
         Relationships: []
       }
