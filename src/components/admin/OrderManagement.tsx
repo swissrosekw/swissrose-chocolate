@@ -45,6 +45,9 @@ const OrderManagement = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
     const { error } = await supabase
       .from("orders")
       .update({ order_status: newStatus })
@@ -55,6 +58,31 @@ const OrderManagement = () => {
       console.error("Error updating order:", error);
     } else {
       toast.success("Order status updated");
+      
+      // Send email notification to customer
+      try {
+        await supabase.functions.invoke("send-order-email", {
+          body: {
+            orderId: order.id,
+            customerEmail: order.email || "",
+            customerName: order.full_name,
+            customerPhone: order.phone,
+            items: order.items as any[],
+            subtotal: order.total_amount,
+            deliveryFee: 0,
+            total: order.total_amount,
+            address: order.address,
+            city: order.city,
+            governorate: order.governorate,
+            notes: order.notes || "",
+            paymentMethod: order.payment_method,
+            orderStatus: newStatus,
+          },
+        });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+      }
+      
       fetchOrders();
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, order_status: newStatus });
@@ -66,14 +94,48 @@ const OrderManagement = () => {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "processing":
+      case "accepted":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "completed":
+      case "preparing":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "on_delivery":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      case "delivered":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "cancelled":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    }
+  };
+
+  const getNextStatus = (currentStatus: string) => {
+    switch (currentStatus) {
+      case "pending":
+        return "accepted";
+      case "accepted":
+        return "preparing";
+      case "preparing":
+        return "on_delivery";
+      case "on_delivery":
+        return "delivered";
+      default:
+        return null;
+    }
+  };
+
+  const getStatusButtonText = (currentStatus: string) => {
+    switch (currentStatus) {
+      case "pending":
+        return "✅ Accept Order";
+      case "accepted":
+        return "🍳 Start Preparing";
+      case "preparing":
+        return "🚚 Out for Delivery";
+      case "on_delivery":
+        return "✔️ Mark Delivered";
+      default:
+        return null;
     }
   };
 
@@ -89,8 +151,10 @@ const OrderManagement = () => {
             <SelectContent>
               <SelectItem value="all">All Orders</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="preparing">Preparing</SelectItem>
+              <SelectItem value="on_delivery">On Delivery</SelectItem>
+              <SelectItem value="delivered">Delivered</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
@@ -152,21 +216,25 @@ const OrderManagement = () => {
                             >
                               View
                             </Button>
-                            {order.order_status !== "cancelled" && order.order_status !== "completed" && (
-                              <Select
-                                value={order.order_status || "pending"}
-                                onValueChange={(value) => updateOrderStatus(order.id, value)}
-                              >
-                                <SelectTrigger className="w-[120px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="processing">Processing</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="cancelled">Cancel</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            {order.order_status !== "cancelled" && order.order_status !== "delivered" && (
+                              <>
+                                {getNextStatus(order.order_status || "pending") && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => updateOrderStatus(order.id, getNextStatus(order.order_status || "pending")!)}
+                                  >
+                                    {getStatusButtonText(order.order_status || "pending")}
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => updateOrderStatus(order.id, "cancelled")}
+                                >
+                                  ❌ Cancel
+                                </Button>
+                              </>
                             )}
                           </div>
                         </TableCell>

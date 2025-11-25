@@ -81,6 +81,35 @@ const Checkout = () => {
 
       if (orderError) throw orderError;
 
+      // Send order confirmation emails
+      try {
+        await supabase.functions.invoke("send-order-email", {
+          body: {
+            orderId: order.id,
+            customerEmail: formData.email,
+            customerName: formData.fullName,
+            customerPhone: formData.phone,
+            items: items.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            subtotal: totalPrice,
+            deliveryFee: 0,
+            total: totalPrice,
+            address: formData.address,
+            city: formData.city,
+            governorate: formData.governorate,
+            notes: formData.notes,
+            paymentMethod: formData.paymentMethod,
+            orderStatus: "pending",
+          },
+        });
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Don't fail the order if email fails
+      }
+
       // Handle payment based on method
       if (formData.paymentMethod === 'tap' && paymentSettings?.tap_payments_enabled) {
         const { data: paymentData, error: paymentError } = await supabase.functions.invoke(

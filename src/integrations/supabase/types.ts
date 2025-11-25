@@ -155,6 +155,79 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reviews: {
+        Row: {
+          comment: string
+          cons: string[] | null
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          is_approved: boolean | null
+          is_verified_purchase: boolean | null
+          order_id: string | null
+          product_id: string
+          pros: string[] | null
+          rating: number
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          cons?: string[] | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_approved?: boolean | null
+          is_verified_purchase?: boolean | null
+          order_id?: string | null
+          product_id: string
+          pros?: string[] | null
+          rating: number
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          cons?: string[] | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_approved?: boolean | null
+          is_verified_purchase?: boolean | null
+          order_id?: string | null
+          product_id?: string
+          pros?: string[] | null
+          rating?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
@@ -228,6 +301,67 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
+      }
+      review_helpful_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_responses: {
+        Row: {
+          admin_id: string
+          created_at: string | null
+          id: string
+          response: string
+          review_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string | null
+          id?: string
+          response: string
+          review_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string | null
+          id?: string
+          response?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_responses_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
