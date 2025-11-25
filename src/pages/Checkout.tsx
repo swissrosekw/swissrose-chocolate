@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { useCart } from "@/hooks/useCart";
 import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ const Checkout = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16">
+        <main className="pt-24 pb-24">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-3xl font-playfair font-bold mb-4">Your cart is empty</h1>
             <Button asChild>
@@ -129,6 +130,7 @@ const Checkout = () => {
           </div>
         </main>
         <Footer />
+        <BottomNav />
       </div>
     );
   }
@@ -137,7 +139,7 @@ const Checkout = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-24 pb-24">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-playfair font-bold text-primary mb-8">
             Checkout
@@ -368,6 +370,7 @@ const Checkout = () => {
       </main>
 
       <Footer />
+      <BottomNav />
     </div>
   );
 };
