@@ -20,7 +20,7 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center md:justify-between">
           {/* Logo */}
           <Link to="/">
             <h1 className="text-2xl font-playfair font-bold text-primary cursor-pointer hover:opacity-80 transition-opacity">
