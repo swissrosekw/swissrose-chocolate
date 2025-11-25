@@ -5,6 +5,9 @@ import Footer from "@/components/Footer";
 import PaymentSettings from "@/components/admin/PaymentSettings";
 import OTPManagement from "@/components/admin/OTPManagement";
 import UserManagement from "@/components/admin/UserManagement";
+import OrderManagement from "@/components/admin/OrderManagement";
+import { useAdminNotifications } from "@/hooks/useAdminNotifications";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,11 +37,15 @@ interface Category {
 }
 
 const Admin = () => {
+  const { isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Enable real-time notifications for admin
+  useAdminNotifications(isAdmin);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -374,7 +381,7 @@ const Admin = () => {
               </TabsContent>
               
               <TabsContent value="orders">
-                <p className="text-muted-foreground">Order management coming soon...</p>
+                <OrderManagement />
               </TabsContent>
 
               <TabsContent value="users">

@@ -53,6 +53,23 @@ const Profile = () => {
     navigate("/");
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ order_status: "cancelled" })
+      .eq("id", orderId);
+
+    if (error) {
+      toast.error("Failed to cancel order");
+      console.error("Error cancelling order:", error);
+    } else {
+      toast.success("Order cancelled successfully");
+      fetchOrders();
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -173,7 +190,7 @@ const Profile = () => {
                             </span>
                           </div>
                           
-                          <div className="flex justify-between items-center">
+                          <div className="flex justify-between items-center mt-2">
                             <p className="text-sm text-muted-foreground">
                               {Array.isArray(order.items) ? order.items.length : 0} {Array.isArray(order.items) && order.items.length === 1 ? 'item' : 'items'}
                             </p>
@@ -181,6 +198,19 @@ const Profile = () => {
                               {order.total_amount.toFixed(3)} KD
                             </p>
                           </div>
+
+                          {order.order_status === "pending" && (
+                            <div className="mt-3 pt-3 border-t">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="w-full"
+                              >
+                                Cancel Order
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
