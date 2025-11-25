@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import DeliveryOptions from "@/components/DeliveryOptions";
 import ProductGrid from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
+import SocialMediaButtons from "@/components/SocialMediaButtons";
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
         <ProductGrid />
       </main>
       <Footer />
+      <SocialMediaButtons />
     </div>
   );
 };
