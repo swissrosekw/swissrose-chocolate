@@ -1,11 +1,12 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 const About = () => {
   return <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-24 pb-24">
         {/* Hero Section */}
         <div className="relative h-[400px] overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10" />
@@ -135,6 +136,7 @@ Sunday: Closed<br />
       </main>
       
       <Footer />
+      <BottomNav />
     </div>;
 };
 export default About;

@@ -4,12 +4,13 @@ import DeliveryOptions from "@/components/DeliveryOptions";
 import ProductGrid from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
 import SocialMediaButtons from "@/components/SocialMediaButtons";
+import BottomNav from "@/components/BottomNav";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>
+      <main className="pb-24">
         <Hero />
         
         {/* Delivery Options Section */}
@@ -22,6 +23,7 @@ const Index = () => {
       </main>
       <Footer />
       <SocialMediaButtons />
+      <BottomNav />
     </div>
   );
 };
