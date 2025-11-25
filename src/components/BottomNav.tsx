@@ -49,8 +49,10 @@ const BottomNav = () => {
             >
               <div className="relative">
                 <Icon 
-                  className={`h-6 w-6 transition-colors ${
-                    isActive ? "text-primary" : "text-muted-foreground"
+                  className={`h-6 w-6 transition-all duration-300 ${
+                    isActive 
+                      ? "text-primary animate-in zoom-in-50 duration-300" 
+                      : "text-muted-foreground"
                   }`}
                 />
                 {item.showBadge && totalItems > 0 && (
