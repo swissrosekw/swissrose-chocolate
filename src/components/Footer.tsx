@@ -1,4 +1,6 @@
 import { Instagram, Facebook, Phone, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+
 const Footer = () => {
   return <footer className="bg-card border-t border-border py-12 px-4">
       <div className="container mx-auto">
@@ -14,11 +16,39 @@ const Footer = () => {
           {/* Quick Links */}
           <div>
             <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="hover:text-primary transition-colors cursor-pointer">About Us</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Products</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Catering</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Contact</li>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link 
+                  to="/about" 
+                  className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/products" 
+                  className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
+                >
+                  Products
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/products" 
+                  className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
+                >
+                  Catering
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/about" 
+                  className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
+                >
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -26,22 +56,44 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-foreground mb-4">Get in Touch</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
-                <Phone className="h-4 w-4" />
-                <span>+965 22280123</span>
+              <li>
+                <a 
+                  href="tel:+96522280123" 
+                  className="flex items-center gap-2 hover:text-primary transition-all duration-200 hover:translate-x-1 active:scale-95 inline-flex"
+                >
+                  <Phone className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                  <span>+965 22280123</span>
+                </a>
               </li>
-              <li className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
-                <Mail className="h-4 w-4" />
-                <span>info@swissrosekw.com</span>
+              <li>
+                <a 
+                  href="mailto:info@swissrosekw.com" 
+                  className="flex items-center gap-2 hover:text-primary transition-all duration-200 hover:translate-x-1 active:scale-95 inline-flex"
+                >
+                  <Mail className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                  <span>info@swissrosekw.com</span>
+                </a>
               </li>
             </ul>
-            <div className="flex gap-4 mt-4">
-              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
-                <Instagram className="h-5 w-5" />
-              </div>
-              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
-                <Facebook className="h-5 w-5" />
-              </div>
+            <div className="flex gap-4 mt-6">
+              <a
+                href="https://instagram.com/swissrosekw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative h-10 w-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:scale-110 transition-all duration-300 active:scale-95 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-primary/20 scale-0 group-hover:scale-100 transition-transform duration-300 rounded-full" />
+                <Instagram className="h-5 w-5 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+              </a>
+              <a
+                href="https://facebook.com/swissrosekw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative h-10 w-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:scale-110 transition-all duration-300 active:scale-95 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-primary/20 scale-0 group-hover:scale-100 transition-transform duration-300 rounded-full" />
+                <Facebook className="h-5 w-5 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+              </a>
             </div>
           </div>
         </div>
