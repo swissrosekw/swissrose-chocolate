@@ -1,7 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +24,40 @@ interface OrderEmailRequest {
   notes?: string;
   paymentMethod: string;
   orderStatus: string;
+}
+
+interface ResendEmailPayload {
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+}
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+async function sendResendEmail(payload: ResendEmailPayload) {
+  if (!RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error("Resend API error:", response.status, errorBody);
+    throw new Error(`Failed to send email via Resend: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("Resend API response:", data);
+  return data;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -177,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send customer email
-    const customerEmailResponse = await resend.emails.send({
+    const customerEmailResponse = await sendResendEmail({
       from: `Swiss Rose <${adminEmail}>`,
       to: [orderData.customerEmail],
       subject: `Order Confirmation - ${orderData.orderId}`,
@@ -185,7 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Send admin email
-    const adminEmailResponse = await resend.emails.send({
+    const adminEmailResponse = await sendResendEmail({
       from: `Swiss Rose Orders <${adminEmail}>`,
       to: [adminEmail],
       subject: `🔔 New Order - ${orderData.orderId}`,
