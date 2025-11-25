@@ -6,6 +6,8 @@ import PaymentSettings from "@/components/admin/PaymentSettings";
 import OTPManagement from "@/components/admin/OTPManagement";
 import UserManagement from "@/components/admin/UserManagement";
 import OrderManagement from "@/components/admin/OrderManagement";
+import { ReviewManagement } from "@/components/admin/ReviewManagement";
+import { LowStockAlerts } from "@/components/admin/LowStockAlerts";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -197,8 +199,10 @@ const Admin = () => {
             <Tabs defaultValue="products" className="space-y-6">
               <TabsList>
                 <TabsTrigger value="products">Products</TabsTrigger>
+                <TabsTrigger value="stock">Low Stock</TabsTrigger>
                 <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="otp">OTP Verifications</TabsTrigger>
                 <TabsTrigger value="payments">Payment Settings</TabsTrigger>
@@ -376,12 +380,20 @@ const Admin = () => {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="stock">
+                <LowStockAlerts />
+              </TabsContent>
+
               <TabsContent value="categories">
                 <p className="text-muted-foreground">Category management coming soon...</p>
               </TabsContent>
               
               <TabsContent value="orders">
                 <OrderManagement />
+              </TabsContent>
+
+              <TabsContent value="reviews">
+                <ReviewManagement />
               </TabsContent>
 
               <TabsContent value="users">
