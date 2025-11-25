@@ -9,10 +9,10 @@ const SocialMediaButtons = () => {
         href="https://wa.me/96522280123"
         target="_blank"
         rel="noopener noreferrer"
-        className="group flex items-center justify-center w-16 h-16 bg-[#25D366] hover:bg-[#20BA5A] rounded-l-xl shadow-lg transition-all duration-300 hover:w-20"
+        className="group flex items-center justify-center w-12 h-16 bg-[#25D366] hover:bg-[#20BA5A] rounded-l-xl shadow-lg transition-all duration-300 hover:w-16"
         aria-label="Contact us on WhatsApp"
       >
-        <MessageCircle className="w-7 h-7 text-white" />
+        <MessageCircle className="w-6 h-6 text-white" />
       </a>
 
       {/* Instagram Button */}
@@ -20,7 +20,7 @@ const SocialMediaButtons = () => {
         href="https://instagram.com/swissrosekw"
         target="_blank"
         rel="noopener noreferrer"
-        className="group flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 rounded-l-xl shadow-lg transition-all duration-300 hover:w-20"
+        className="group flex items-center justify-center w-12 h-16 bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 rounded-l-xl shadow-lg transition-all duration-300 hover:w-16"
         aria-label="Follow us on Instagram"
       >
         <Instagram className="w-7 h-7 text-white" />
