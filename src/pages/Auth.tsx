@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 
 const phoneSchema = z.object({
-  phone: z.string()
+  phone: z
+    .string()
     .regex(/^\+965[0-9]{8}$/, "Phone must start with +965 and have 8 digits after"),
   fullName: z.string().min(2, "Name must be at least 2 characters").optional(),
 });
@@ -51,21 +51,29 @@ const Auth = () => {
     },
   });
 
+  const [otpInputId] = useState(() => `otp-input-${Math.random().toString(36).slice(2)}`);
+
+  useEffect(() => {
+    if (otpSent) {
+      otpForm.setValue("otp", "");
+    }
+  }, [otpSent, otpForm]);
+
   const handleSendOTP = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-otp', {
+      const { data, error } = await supabase.functions.invoke("send-whatsapp-otp", {
         body: { phone: values.phone },
       });
 
       if (error) throw error;
 
       setPhoneNumber(values.phone);
-      otpForm.reset({ otp: "" }); // Explicitly reset OTP form
+      otpForm.reset({ otp: "" });
       setOtpSent(true);
       toast.success("OTP sent to your WhatsApp!");
     } catch (error: any) {
-      console.error('OTP send error:', error);
+      console.error("OTP send error:", error);
       toast.error(error.message || "Failed to send OTP");
     } finally {
       setIsLoading(false);
@@ -76,24 +84,23 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const fullName = phoneForm.getValues("fullName");
-      
-      const { data, error } = await supabase.functions.invoke('verify-whatsapp-otp', {
-        body: { 
-          phone: phoneNumber, 
+
+      const { data, error } = await supabase.functions.invoke("verify-whatsapp-otp", {
+        body: {
+          phone: phoneNumber,
           otp: values.otp,
-          fullName: fullName || undefined
+          fullName: fullName || undefined,
         },
       });
 
       if (error) throw error;
 
       if (data?.session?.properties?.action_link) {
-        // Use the magic link to sign in
         const actionLink = data.session.properties.action_link;
         const url = new URL(actionLink);
-        const token = url.searchParams.get('token');
-        const type = url.searchParams.get('type');
-        
+        const token = url.searchParams.get("token");
+        const type = url.searchParams.get("type");
+
         if (token && type) {
           const { error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: token,
@@ -107,7 +114,7 @@ const Auth = () => {
       toast.success(data?.isNewUser ? "Account created successfully!" : "Signed in successfully!");
       navigate("/");
     } catch (error: any) {
-      console.error('OTP verify error:', error);
+      console.error("OTP verify error:", error);
       toast.error(error.message || "Invalid OTP");
     } finally {
       setIsLoading(false);
@@ -129,7 +136,7 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           {!otpSent ? (
-            <Form {...phoneForm}>
+            <Form {...phoneForm} key="phone-form">
               <form onSubmit={phoneForm.handleSubmit(handleSendOTP)} className="space-y-4">
                 <FormField
                   control={phoneForm.control}
@@ -138,13 +145,13 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="+96512345678" 
+                        <Input
+                          placeholder="+96512345678"
                           {...field}
                           onChange={(e) => {
                             let value = e.target.value;
-                            if (!value.startsWith('+965')) {
-                              value = '+965' + value.replace(/^\+?965?/, '');
+                            if (!value.startsWith("+965")) {
+                              value = "+965" + value.replace(/^\+?965?/, "");
                             }
                             field.onChange(value);
                           }}
@@ -154,7 +161,7 @@ const Auth = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={phoneForm.control}
                   name="fullName"
@@ -168,15 +175,19 @@ const Auth = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Sending OTP..." : "Send OTP"}
                 </Button>
               </form>
             </Form>
           ) : (
-            <Form {...otpForm}>
-              <form onSubmit={otpForm.handleSubmit(handleVerifyOTP)} className="space-y-4" autoComplete="off">
+            <Form {...otpForm} key="otp-form">
+              <form
+                onSubmit={otpForm.handleSubmit(handleVerifyOTP)}
+                className="space-y-4"
+                autoComplete="off"
+              >
                 <FormField
                   control={otpForm.control}
                   name="otp"
@@ -184,12 +195,13 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Verification Code</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
+                          id={otpInputId}
                           placeholder="Enter your 6-digit code"
                           maxLength={6}
                           value={field.value}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
+                            const value = e.target.value.replace(/\D/g, "");
                             field.onChange(value);
                           }}
                           autoComplete="off"
@@ -204,11 +216,11 @@ const Auth = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Verifying..." : "Verify OTP"}
                 </Button>
-                
+
                 <div className="space-y-2">
                   <Button
                     type="button"
@@ -219,7 +231,7 @@ const Auth = () => {
                   >
                     Resend OTP
                   </Button>
-                  
+
                   <Button
                     type="button"
                     variant="ghost"
