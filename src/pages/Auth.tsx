@@ -61,6 +61,7 @@ const Auth = () => {
       if (error) throw error;
 
       setPhoneNumber(values.phone);
+      otpForm.reset({ otp: "" }); // Explicitly reset OTP form
       setOtpSent(true);
       toast.success("OTP sent to your WhatsApp!");
     } catch (error: any) {
@@ -175,7 +176,7 @@ const Auth = () => {
             </Form>
           ) : (
             <Form {...otpForm}>
-              <form onSubmit={otpForm.handleSubmit(handleVerifyOTP)} className="space-y-4">
+              <form onSubmit={otpForm.handleSubmit(handleVerifyOTP)} className="space-y-4" autoComplete="off">
                 <FormField
                   control={otpForm.control}
                   name="otp"
@@ -183,21 +184,21 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Verification Code</FormLabel>
                       <FormControl>
-                        <InputOTP
+                        <Input 
+                          placeholder="Enter your 6-digit code"
                           maxLength={6}
                           value={field.value}
-                          onChange={field.onChange}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
+                          autoComplete="off"
+                          data-form-type="other"
+                          name="otp-verification-code"
+                          inputMode="numeric"
+                          className="text-center text-lg tracking-widest"
                           autoFocus
-                        >
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
