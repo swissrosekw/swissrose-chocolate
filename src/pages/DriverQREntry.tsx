@@ -27,10 +27,11 @@ const DriverQREntry = () => {
       if (!driverCode) return;
 
       try {
+        const normalizedCode = driverCode?.toUpperCase();
         const { data, error } = await supabase
           .from('orders')
           .select('id, tracking_code, order_status, governorate, city, driver_name')
-          .eq('driver_code', driverCode)
+          .eq('driver_code', normalizedCode)
           .maybeSingle();
 
         if (error) throw error;
