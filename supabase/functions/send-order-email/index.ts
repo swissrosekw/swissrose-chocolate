@@ -24,6 +24,8 @@ interface OrderEmailRequest {
   notes?: string;
   paymentMethod: string;
   orderStatus: string;
+  trackingCode?: string;
+  trackingUrl?: string;
 }
 
 interface ResendEmailPayload {
@@ -60,6 +62,54 @@ async function sendResendEmail(payload: ResendEmailPayload) {
   return data;
 }
 
+// Generate tracking link email HTML
+const generateTrackingLinkEmail = (orderData: OrderEmailRequest) => `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+        .tracking-box { background: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .track-button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 15px; }
+        .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚚 Your Order is On The Way!</h1>
+          <p>Hi ${orderData.customerName}!</p>
+        </div>
+        <div class="content">
+          <div class="tracking-box">
+            <h2>📍 Track Your Delivery</h2>
+            <p>Your order is now out for delivery! Click the button below to track your driver in real-time.</p>
+            <p><strong>Tracking Code:</strong> ${orderData.trackingCode}</p>
+            <a href="${orderData.trackingUrl}" class="track-button">🗺️ Track My Order</a>
+          </div>
+
+          <h3>📦 Order Summary</h3>
+          <p><strong>Order ID:</strong> ${orderData.orderId}</p>
+          <p><strong>Delivery Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.governorate}</p>
+          <p><strong>Total:</strong> ${orderData.total.toFixed(3)} KWD</p>
+
+          <p style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            💡 <strong>Tip:</strong> Keep this page open on your phone to see the driver's location update in real-time!
+          </p>
+
+          <div class="footer">
+            <p>Swiss Rose Kuwait | Premium Gifts & Flowers</p>
+            <p>Thank you for choosing us! 🌹</p>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -68,6 +118,44 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const orderData: OrderEmailRequest = await req.json();
     const adminEmail = Deno.env.get("ADMIN_EMAIL") || "orders@swissrosekw.com";
+
+    // Helper to validate email format
+    const isValidEmail = (email: string) => {
+      return email && email.includes('@') && email.includes('.');
+    };
+
+    // Handle tracking_link email type separately
+    if (orderData.orderStatus === "tracking_link") {
+      console.log("Sending tracking link email to:", orderData.customerEmail);
+      
+      if (!isValidEmail(orderData.customerEmail)) {
+        throw new Error("Invalid customer email for tracking link");
+      }
+
+      if (!orderData.trackingUrl || !orderData.trackingCode) {
+        throw new Error("Missing tracking URL or code");
+      }
+
+      const trackingEmailResponse = await sendResendEmail({
+        from: `Swiss Rose <${adminEmail}>`,
+        to: [orderData.customerEmail],
+        subject: `🚚 Track Your Delivery - ${orderData.trackingCode}`,
+        html: generateTrackingLinkEmail(orderData),
+      });
+
+      console.log("Tracking link email sent:", trackingEmailResponse);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          trackingEmail: trackingEmailResponse 
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     // Customer confirmation email
     const customerEmailHtml = `
@@ -206,11 +294,6 @@ const handler = async (req: Request): Promise<Response> => {
         </body>
       </html>
     `;
-
-    // Helper to validate email format
-    const isValidEmail = (email: string) => {
-      return email && email.includes('@') && email.includes('.');
-    };
 
     let customerEmailResponse = null;
     
