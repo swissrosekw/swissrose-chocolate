@@ -6,13 +6,40 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, QrCode, Link, Truck, User, Phone } from "lucide-react";
+import { 
+  Copy, QrCode, Link, Truck, User, Phone, 
+  RefreshCw, Mail, MessageCircle, Send,
+  CheckCircle, AlertCircle, XCircle, MapPin
+} from "lucide-react";
 import { generateAllTrackingCodes } from "@/lib/trackingUtils";
 
 type Order = Tables<"orders">;
+
+interface CodeStatus {
+  isValid: boolean;
+  hasDriver: boolean;
+  hasLocations: boolean;
+  lastUpdate: string | null;
+}
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -22,10 +49,21 @@ const OrderManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedOrderForQR, setSelectedOrderForQR] = useState<Order | null>(null);
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
+  const [codeStatus, setCodeStatus] = useState<CodeStatus | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
+
+  useEffect(() => {
+    if (selectedOrderForQR?.driver_code) {
+      checkCodeStatus(selectedOrderForQR);
+    } else {
+      setCodeStatus(null);
+    }
+  }, [selectedOrderForQR]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -49,6 +87,26 @@ const OrderManagement = () => {
     setLoading(false);
   };
 
+  const checkCodeStatus = async (order: Order) => {
+    try {
+      const { data: locations } = await supabase
+        .from("driver_locations")
+        .select("updated_at")
+        .eq("tracking_code", order.tracking_code)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      setCodeStatus({
+        isValid: !!order.driver_code,
+        hasDriver: !!order.driver_name,
+        hasLocations: locations && locations.length > 0,
+        lastUpdate: locations?.[0]?.updated_at || null
+      });
+    } catch (error) {
+      console.error("Error checking code status:", error);
+    }
+  };
+
   const generateTrackingCodesForOrder = async (orderId: string) => {
     const codes = generateAllTrackingCodes();
     
@@ -63,6 +121,120 @@ const OrderManagement = () => {
     }
 
     return codes;
+  };
+
+  const regenerateTrackingCodes = async () => {
+    if (!selectedOrderForQR) return;
+
+    try {
+      const codes = generateAllTrackingCodes();
+      
+      // Update order with new codes and reset driver info
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({
+          ...codes,
+          driver_name: null,
+          driver_phone: null
+        })
+        .eq("id", selectedOrderForQR.id);
+
+      if (updateError) throw updateError;
+
+      // Delete old driver_locations entries for this order
+      await supabase
+        .from("driver_locations")
+        .delete()
+        .eq("order_id", selectedOrderForQR.id);
+
+      toast.success("New tracking codes generated successfully!");
+      
+      // Update local state
+      const updatedOrder = { 
+        ...selectedOrderForQR, 
+        ...codes, 
+        driver_name: null, 
+        driver_phone: null 
+      };
+      setSelectedOrderForQR(updatedOrder);
+      fetchOrders();
+      setRegenerateDialogOpen(false);
+    } catch (error) {
+      console.error("Error regenerating codes:", error);
+      toast.error("Failed to regenerate codes");
+    }
+  };
+
+  const sendViaWhatsApp = (order: Order) => {
+    if (!order.tracking_code) {
+      toast.error("No tracking code available");
+      return;
+    }
+
+    const trackingUrl = getCustomerTrackingUrl(order.tracking_code);
+    const message = encodeURIComponent(
+      `🌹 Swiss Rose - Order Update\n\n` +
+      `Hi ${order.full_name},\n\n` +
+      `Your order is on the way! 🚚\n\n` +
+      `Track your delivery here:\n${trackingUrl}\n\n` +
+      `Thank you for choosing Swiss Rose! 💐`
+    );
+    
+    // Format phone number - ensure proper format
+    let phone = order.phone.replace(/\s/g, '').replace(/-/g, '');
+    if (phone.startsWith('0')) {
+      phone = '965' + phone.slice(1);
+    } else if (!phone.startsWith('965') && !phone.startsWith('+965')) {
+      phone = '965' + phone;
+    }
+    phone = phone.replace('+', '');
+    
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    toast.success("WhatsApp opened with tracking link");
+  };
+
+  const sendViaEmail = async (order: Order) => {
+    if (!order.email) {
+      toast.error("Customer has no email address");
+      return;
+    }
+
+    if (!order.tracking_code) {
+      toast.error("No tracking code available");
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-order-email", {
+        body: {
+          orderId: order.id,
+          customerEmail: order.email,
+          customerName: order.full_name,
+          customerPhone: order.phone,
+          items: order.items as any[],
+          subtotal: order.total_amount,
+          deliveryFee: 0,
+          total: order.total_amount,
+          address: order.address,
+          city: order.city,
+          governorate: order.governorate,
+          notes: order.notes || "",
+          paymentMethod: order.payment_method,
+          orderStatus: "tracking_link",
+          trackingCode: order.tracking_code,
+          trackingUrl: getCustomerTrackingUrl(order.tracking_code),
+        },
+      });
+
+      if (error) throw error;
+      toast.success("Tracking link sent via email!");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -446,6 +618,46 @@ const OrderManagement = () => {
           </DialogHeader>
           {selectedOrderForQR && selectedOrderForQR.driver_code && (
             <div className="space-y-4">
+              {/* Code Status Section */}
+              <div className="p-3 bg-muted rounded-lg space-y-2">
+                <p className="text-sm font-medium mb-2">Code Status</p>
+                <div className="flex items-center gap-2 text-sm">
+                  {codeStatus?.isValid ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                  <span>Driver Code: {selectedOrderForQR.driver_code}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {codeStatus?.isValid ? "Valid" : "Invalid"}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  {codeStatus?.hasDriver ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  )}
+                  <span>Driver: {codeStatus?.hasDriver ? "Registered" : "Not yet registered"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  {codeStatus?.hasLocations ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                  <span>
+                    <MapPin className="h-3 w-3 inline mr-1" />
+                    Tracking: {codeStatus?.hasLocations ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                {codeStatus?.lastUpdate && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Last update: {new Date(codeStatus.lastUpdate).toLocaleString()}
+                  </p>
+                )}
+              </div>
+
               {/* QR Code */}
               <div className="flex justify-center p-4 bg-white rounded-lg">
                 <QRCodeSVG
@@ -490,6 +702,35 @@ const OrderManagement = () => {
                 </div>
               </div>
 
+              {/* Send to Customer Section */}
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Send Tracking Link to Customer</p>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => sendViaWhatsApp(selectedOrderForQR)}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => sendViaEmail(selectedOrderForQR)}
+                    disabled={!selectedOrderForQR.email || sendingEmail}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    {sendingEmail ? "Sending..." : "Email"}
+                  </Button>
+                </div>
+                {!selectedOrderForQR.email && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Email not available for this customer
+                  </p>
+                )}
+              </div>
+
               {/* Links */}
               <div className="space-y-2 border-t pt-4">
                 <Button
@@ -510,6 +751,21 @@ const OrderManagement = () => {
                 </Button>
               </div>
 
+              {/* Regenerate Codes Button */}
+              <div className="border-t pt-4">
+                <Button
+                  className="w-full"
+                  variant="destructive"
+                  onClick={() => setRegenerateDialogOpen(true)}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Regenerate Codes
+                </Button>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  This will invalidate old codes and reset driver assignment
+                </p>
+              </div>
+
               {/* Driver Info if assigned */}
               {selectedOrderForQR.driver_name && (
                 <div className="p-3 bg-primary/10 rounded-lg border-t">
@@ -528,6 +784,31 @@ const OrderManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Regenerate Codes Confirmation Dialog */}
+      <AlertDialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Regenerate Tracking Codes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Generate new tracking code and driver code</li>
+                <li>Invalidate the old codes (they won't work anymore)</li>
+                <li>Reset driver assignment (name and phone)</li>
+                <li>Delete any existing location tracking data</li>
+              </ul>
+              <p className="mt-3 font-medium">Are you sure you want to proceed?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={regenerateTrackingCodes}>
+              Yes, Regenerate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
