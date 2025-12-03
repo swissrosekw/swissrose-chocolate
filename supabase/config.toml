@@ -2,3 +2,18 @@ project_id = "hiqdcwvakglkigcmnaqd"
 
 [functions.send-order-email]
 verify_jwt = false
+
+[functions.send-whatsapp-otp]
+verify_jwt = false
+
+[functions.verify-whatsapp-otp]
+verify_jwt = false
+
+[functions.send-email-otp]
+verify_jwt = false
+
+[functions.verify-email-otp]
+verify_jwt = false
+
+[functions.process-tap-payment]
+verify_jwt = false

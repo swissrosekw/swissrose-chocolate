@@ -11,6 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Phone, Mail } from "lucide-react";
 
 const phoneSchema = z.object({
   phone: z
@@ -19,14 +21,22 @@ const phoneSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").optional(),
 });
 
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  fullName: z.string().min(2, "Name must be at least 2 characters").optional(),
+});
+
 const otpSchema = z.object({
   otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
+type AuthMethod = "whatsapp" | "email";
+
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
+  const [identifier, setIdentifier] = useState(""); // phone or email
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -40,6 +50,14 @@ const Auth = () => {
     resolver: zodResolver(phoneSchema),
     defaultValues: {
       phone: "+965",
+      fullName: "",
+    },
+  });
+
+  const emailForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: "",
       fullName: "",
     },
   });
@@ -59,7 +77,7 @@ const Auth = () => {
     }
   }, [otpSent, otpForm]);
 
-  const handleSendOTP = async (values: z.infer<typeof phoneSchema>) => {
+  const handleSendPhoneOTP = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-whatsapp-otp", {
@@ -68,7 +86,8 @@ const Auth = () => {
 
       if (error) throw error;
 
-      setPhoneNumber(values.phone);
+      setIdentifier(values.phone);
+      setAuthMethod("whatsapp");
       otpForm.reset({ otp: "" });
       setOtpSent(true);
       toast.success("OTP sent to your WhatsApp!");
@@ -80,22 +99,46 @@ const Auth = () => {
     }
   };
 
-  const handleVerifyOTP = async (values: z.infer<typeof otpSchema>) => {
+  const handleSendEmailOTP = async (values: z.infer<typeof emailSchema>) => {
     setIsLoading(true);
     try {
-      const fullName = phoneForm.getValues("fullName");
-
-      const { data, error } = await supabase.functions.invoke("verify-whatsapp-otp", {
-        body: {
-          phone: phoneNumber,
-          otp: values.otp,
-          fullName: fullName || undefined,
-        },
+      const { data, error } = await supabase.functions.invoke("send-email-otp", {
+        body: { email: values.email, fullName: values.fullName },
       });
 
       if (error) throw error;
 
-      if (data?.session?.properties?.action_link) {
+      setIdentifier(values.email);
+      setAuthMethod("email");
+      otpForm.reset({ otp: "" });
+      setOtpSent(true);
+      toast.success("OTP sent to your email!");
+    } catch (error: any) {
+      console.error("OTP send error:", error);
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (values: z.infer<typeof otpSchema>) => {
+    setIsLoading(true);
+    try {
+      const fullName = authMethod === "whatsapp" 
+        ? phoneForm.getValues("fullName") 
+        : emailForm.getValues("fullName");
+
+      const functionName = authMethod === "whatsapp" ? "verify-whatsapp-otp" : "verify-email-otp";
+      const body = authMethod === "whatsapp" 
+        ? { phone: identifier, otp: values.otp, fullName: fullName || undefined }
+        : { email: identifier, otp: values.otp, fullName: fullName || undefined };
+
+      const { data, error } = await supabase.functions.invoke(functionName, { body });
+
+      if (error) throw error;
+
+      // Handle WhatsApp action link
+      if (authMethod === "whatsapp" && data?.session?.properties?.action_link) {
         const actionLink = data.session.properties.action_link;
         const url = new URL(actionLink);
         const token = url.searchParams.get("token");
@@ -111,6 +154,14 @@ const Auth = () => {
         }
       }
 
+      // Handle email session
+      if (authMethod === "email" && data?.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      }
+
       toast.success(data?.isNewUser ? "Account created successfully!" : "Signed in successfully!");
       navigate("/");
     } catch (error: any) {
@@ -122,7 +173,16 @@ const Auth = () => {
   };
 
   const handleResendOTP = async () => {
-    await handleSendOTP(phoneForm.getValues());
+    if (authMethod === "whatsapp") {
+      await handleSendPhoneOTP(phoneForm.getValues());
+    } else {
+      await handleSendEmailOTP(emailForm.getValues());
+    }
+  };
+
+  const resetToMethodSelection = () => {
+    setOtpSent(false);
+    otpForm.reset();
   };
 
   return (
@@ -131,56 +191,115 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-playfair text-primary">SWISS ROSE</CardTitle>
           <CardDescription>
-            {otpSent ? "Enter the code sent to your WhatsApp" : "Sign in with WhatsApp"}
+            {otpSent 
+              ? `Enter the code sent to your ${authMethod === "whatsapp" ? "WhatsApp" : "email"}` 
+              : "Sign in to continue"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!otpSent ? (
-            <Form {...phoneForm} key="phone-form">
-              <form onSubmit={phoneForm.handleSubmit(handleSendOTP)} className="space-y-4">
-                <FormField
-                  control={phoneForm.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="+96512345678"
-                          {...field}
-                          onChange={(e) => {
-                            let value = e.target.value;
-                            if (!value.startsWith("+965")) {
-                              value = "+965" + value.replace(/^\+?965?/, "");
-                            }
-                            field.onChange(value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Tabs defaultValue="email" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </TabsTrigger>
+                <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  WhatsApp
+                </TabsTrigger>
+              </TabsList>
 
-                <FormField
-                  control={phoneForm.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <TabsContent value="email">
+                <Form {...emailForm} key="email-form">
+                  <form onSubmit={emailForm.handleSubmit(handleSendEmailOTP)} className="space-y-4">
+                    <FormField
+                      control={emailForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="you@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending OTP..." : "Send OTP"}
-                </Button>
-              </form>
-            </Form>
+                    <FormField
+                      control={emailForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Sending OTP..." : "Send OTP"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+
+              <TabsContent value="whatsapp">
+                <Form {...phoneForm} key="phone-form">
+                  <form onSubmit={phoneForm.handleSubmit(handleSendPhoneOTP)} className="space-y-4">
+                    <FormField
+                      control={phoneForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="+96512345678"
+                              {...field}
+                              onChange={(e) => {
+                                let value = e.target.value;
+                                if (!value.startsWith("+965")) {
+                                  value = "+965" + value.replace(/^\+?965?/, "");
+                                }
+                                field.onChange(value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={phoneForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Sending OTP..." : "Send OTP"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
           ) : (
             <Form {...otpForm} key="otp-form">
               <form
@@ -236,12 +355,9 @@ const Auth = () => {
                     type="button"
                     variant="ghost"
                     className="w-full"
-                    onClick={() => {
-                      setOtpSent(false);
-                      otpForm.reset();
-                    }}
+                    onClick={resetToMethodSelection}
                   >
-                    Change Phone Number
+                    Change {authMethod === "whatsapp" ? "Phone Number" : "Email"}
                   </Button>
                 </div>
               </form>
