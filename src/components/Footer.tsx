@@ -1,13 +1,54 @@
-import { Instagram, Facebook, Phone, Mail } from "lucide-react";
+import { useState } from "react";
+import { Instagram, Facebook, Phone, Mail, Plus, Minus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface FooterSectionProps {
+  title: string;
+  children: React.ReactNode;
+  isMobile: boolean;
+}
+
+const FooterSection = ({ title, children, isMobile }: FooterSectionProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!isMobile) {
+    return (
+      <div>
+        <h4 className="font-semibold text-foreground mb-4">{title}</h4>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-b border-border">
+        <h4 className="font-semibold text-foreground">{title}</h4>
+        {isOpen ? (
+          <Minus className="h-5 w-5 text-primary" />
+        ) : (
+          <Plus className="h-5 w-5 text-primary" />
+        )}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3 pb-4">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
 
 const Footer = () => {
+  const isMobile = useIsMobile();
+
   return (
     <footer className="bg-card border-t border-border py-12 px-4">
       <div className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div>
+        {/* Desktop: 4-column grid, Mobile: stacked */}
+        <div className={isMobile ? "space-y-2" : "grid grid-cols-1 md:grid-cols-4 gap-8"}>
+          {/* Brand - Always visible */}
+          <div className={isMobile ? "pb-4 border-b border-border" : ""}>
             <h3 className="text-2xl font-playfair font-bold text-primary mb-4">SWISS ROSE</h3>
             <p className="text-sm text-muted-foreground">
               Beautiful flowers paired with handcrafted chocolates. The perfect gift for every occasion.
@@ -15,8 +56,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
+          <FooterSection title="Quick Links" isMobile={isMobile}>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link 
@@ -59,11 +99,10 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </FooterSection>
 
           {/* Customer Service */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Customer Service</h4>
+          <FooterSection title="Customer Service" isMobile={isMobile}>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link 
@@ -98,11 +137,10 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </FooterSection>
 
           {/* Contact & Legal */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Get in Touch</h4>
+          <FooterSection title="Get in Touch" isMobile={isMobile}>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li>
                 <a 
@@ -141,7 +179,7 @@ const Footer = () => {
                 <Facebook className="h-5 w-5 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
               </a>
             </div>
-          </div>
+          </FooterSection>
         </div>
 
         {/* Legal Links */}
