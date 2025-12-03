@@ -207,15 +207,27 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send customer email
-    const customerEmailResponse = await sendResendEmail({
-      from: `Swiss Rose <${adminEmail}>`,
-      to: [orderData.customerEmail],
-      subject: `Order Confirmation - ${orderData.orderId}`,
-      html: customerEmailHtml,
-    });
+    // Helper to validate email format
+    const isValidEmail = (email: string) => {
+      return email && email.includes('@') && email.includes('.');
+    };
 
-    // Send admin email
+    let customerEmailResponse = null;
+    
+    // Send customer email only if valid email is provided
+    if (isValidEmail(orderData.customerEmail)) {
+      customerEmailResponse = await sendResendEmail({
+        from: `Swiss Rose <${adminEmail}>`,
+        to: [orderData.customerEmail],
+        subject: `Order Confirmation - ${orderData.orderId}`,
+        html: customerEmailHtml,
+      });
+      console.log("Customer email sent:", customerEmailResponse);
+    } else {
+      console.log("Skipping customer email - no valid email provided:", orderData.customerEmail);
+    }
+
+    // Send admin email (always)
     const adminEmailResponse = await sendResendEmail({
       from: `Swiss Rose Orders <${adminEmail}>`,
       to: [adminEmail],
@@ -223,7 +235,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: adminEmailHtml,
     });
 
-    console.log("Customer email sent:", customerEmailResponse);
     console.log("Admin email sent:", adminEmailResponse);
 
     return new Response(
