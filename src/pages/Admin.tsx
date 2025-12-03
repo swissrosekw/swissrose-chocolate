@@ -8,6 +8,7 @@ import UserManagement from "@/components/admin/UserManagement";
 import OrderManagement from "@/components/admin/OrderManagement";
 import { ReviewManagement } from "@/components/admin/ReviewManagement";
 import { LowStockAlerts } from "@/components/admin/LowStockAlerts";
+import CMSManagement from "@/components/admin/CMSManagement";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -197,15 +198,16 @@ const Admin = () => {
           </h1>
 
             <Tabs defaultValue="products" className="space-y-6">
-              <TabsList>
+              <TabsList className="flex-wrap">
                 <TabsTrigger value="products">Products</TabsTrigger>
                 <TabsTrigger value="stock">Low Stock</TabsTrigger>
                 <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
-                <TabsTrigger value="otp">OTP Verifications</TabsTrigger>
-                <TabsTrigger value="payments">Payment Settings</TabsTrigger>
+                <TabsTrigger value="cms">Pages (CMS)</TabsTrigger>
+                <TabsTrigger value="otp">OTP</TabsTrigger>
+                <TabsTrigger value="payments">Payments</TabsTrigger>
               </TabsList>
 
               <TabsContent value="products" className="space-y-6">
@@ -398,6 +400,10 @@ const Admin = () => {
 
               <TabsContent value="users">
                 <UserManagement />
+              </TabsContent>
+
+              <TabsContent value="cms">
+                <CMSManagement />
               </TabsContent>
 
               <TabsContent value="otp">
