@@ -105,7 +105,7 @@ export type Database = {
           expires_at: string
           id: string
           otp: string
-          phone: string
+          phone: string | null
           verified: boolean | null
         }
         Insert: {
@@ -114,7 +114,7 @@ export type Database = {
           expires_at: string
           id?: string
           otp: string
-          phone: string
+          phone?: string | null
           verified?: boolean | null
         }
         Update: {
@@ -123,7 +123,7 @@ export type Database = {
           expires_at?: string
           id?: string
           otp?: string
-          phone?: string
+          phone?: string | null
           verified?: boolean | null
         }
         Relationships: []
