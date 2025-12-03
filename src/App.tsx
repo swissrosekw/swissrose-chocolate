@@ -20,6 +20,10 @@ import MyOrders from "./pages/MyOrders";
 import Wishlist from "./pages/Wishlist";
 import CustomBouquet from "./pages/CustomBouquet";
 import NotFound from "./pages/NotFound";
+import DriverLogin from "./pages/DriverLogin";
+import DriverQREntry from "./pages/DriverQREntry";
+import DriverDashboard from "./pages/DriverDashboard";
+import TrackOrder from "./pages/TrackOrder";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +48,12 @@ const App = () => (
               <Route path="/custom-bouquet" element={<CustomBouquet />} />
               <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
               <Route path="/wishlist" element={<Wishlist />} />
+              {/* Driver Portal Routes */}
+              <Route path="/driver" element={<DriverLogin />} />
+              <Route path="/driver/qr/:driverCode" element={<DriverQREntry />} />
+              <Route path="/driver/dashboard/:trackingCode" element={<DriverDashboard />} />
+              {/* Customer Tracking Route */}
+              <Route path="/track/:trackingCode" element={<TrackOrder />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
