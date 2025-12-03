@@ -101,6 +101,7 @@ export type Database = {
       otp_verifications: {
         Row: {
           created_at: string | null
+          email: string | null
           expires_at: string
           id: string
           otp: string
@@ -109,6 +110,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           expires_at: string
           id?: string
           otp: string
@@ -117,6 +119,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           expires_at?: string
           id?: string
           otp?: string
@@ -279,6 +282,7 @@ export type Database = {
         Row: {
           city: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           governorate: string | null
           id: string
@@ -287,6 +291,7 @@ export type Database = {
         Insert: {
           city?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           governorate?: string | null
           id: string
@@ -295,6 +300,7 @@ export type Database = {
         Update: {
           city?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           governorate?: string | null
           id?: string
