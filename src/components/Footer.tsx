@@ -36,6 +36,14 @@ const Footer = () => {
               </li>
               <li>
                 <Link 
+                  to="/custom-bouquet" 
+                  className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
+                >
+                  Custom Bouquet
+                </Link>
+              </li>
+              <li>
+                <Link 
                   to="/page/gallery" 
                   className="text-muted-foreground hover:text-primary transition-all duration-200 inline-block hover:translate-x-1 active:scale-95"
                 >
