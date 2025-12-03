@@ -790,15 +790,17 @@ const OrderManagement = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Regenerate Tracking Codes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Generate new tracking code and driver code</li>
-                <li>Invalidate the old codes (they won't work anymore)</li>
-                <li>Reset driver assignment (name and phone)</li>
-                <li>Delete any existing location tracking data</li>
-              </ul>
-              <p className="mt-3 font-medium">Are you sure you want to proceed?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                <span>This action will:</span>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Generate new tracking code and driver code</li>
+                  <li>Invalidate the old codes (they won't work anymore)</li>
+                  <li>Reset driver assignment (name and phone)</li>
+                  <li>Delete any existing location tracking data</li>
+                </ul>
+                <span className="block mt-3 font-medium">Are you sure you want to proceed?</span>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

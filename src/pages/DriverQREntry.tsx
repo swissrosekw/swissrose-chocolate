@@ -24,23 +24,40 @@ const DriverQREntry = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!driverCode) return;
+      if (!driverCode) {
+        console.error('No driver code in URL params');
+        toast.error('No driver code provided');
+        navigate('/driver');
+        return;
+      }
 
       try {
-        const normalizedCode = driverCode?.toUpperCase();
+        // Normalize: trim whitespace, remove any URL encoding artifacts, uppercase
+        const normalizedCode = decodeURIComponent(driverCode).trim().toUpperCase();
+        console.log('DriverQREntry - Raw driverCode from URL:', driverCode);
+        console.log('DriverQREntry - Normalized code:', normalizedCode);
+
         const { data, error } = await supabase
           .from('orders')
-          .select('id, tracking_code, order_status, governorate, city, driver_name')
+          .select('id, tracking_code, order_status, governorate, city, driver_name, driver_code')
           .eq('driver_code', normalizedCode)
           .maybeSingle();
 
-        if (error) throw error;
+        console.log('DriverQREntry - Query result:', { data, error });
+
+        if (error) {
+          console.error('DriverQREntry - Database error:', error);
+          throw error;
+        }
 
         if (!data) {
-          toast.error('Invalid driver code');
+          console.error('DriverQREntry - No order found for code:', normalizedCode);
+          toast.error(`Invalid driver code: ${normalizedCode}`);
           navigate('/driver');
           return;
         }
+
+        console.log('DriverQREntry - Order found:', data);
 
         if (data.order_status === 'delivered') {
           toast.error('This order has already been delivered');
@@ -50,13 +67,14 @@ const DriverQREntry = () => {
 
         // If driver already registered, go to dashboard
         if (data.driver_name) {
+          console.log('DriverQREntry - Driver already registered, redirecting to dashboard');
           navigate(`/driver/dashboard/${data.tracking_code}`);
           return;
         }
 
         setOrder(data);
       } catch (error) {
-        console.error('Error fetching order:', error);
+        console.error('DriverQREntry - Error fetching order:', error);
         toast.error('Failed to load order');
       } finally {
         setLoading(false);

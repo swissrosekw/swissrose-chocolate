@@ -17,27 +17,51 @@ const DriverLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!driverCode.trim() || !password.trim()) {
+    const trimmedCode = driverCode.trim().toUpperCase();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedCode || !trimmedPassword) {
       toast.error('Please enter both driver code and password');
       return;
     }
 
     setLoading(true);
+    console.log('DriverLogin - Attempting login with code:', trimmedCode, 'password length:', trimmedPassword.length);
 
     try {
       const { data: order, error } = await supabase
         .from('orders')
-        .select('id, tracking_code, order_status, driver_name')
-        .eq('driver_code', driverCode.toUpperCase())
-        .eq('driver_password', password)
+        .select('id, tracking_code, order_status, driver_name, driver_code, driver_password')
+        .eq('driver_code', trimmedCode)
+        .eq('driver_password', trimmedPassword)
         .maybeSingle();
 
-      if (error) throw error;
+      console.log('DriverLogin - Query result:', { order, error });
+
+      if (error) {
+        console.error('DriverLogin - Database error:', error);
+        throw error;
+      }
 
       if (!order) {
-        toast.error('Invalid driver code or password');
+        // Let's also check if the code exists at all to give better feedback
+        const { data: codeCheck } = await supabase
+          .from('orders')
+          .select('id, driver_code')
+          .eq('driver_code', trimmedCode)
+          .maybeSingle();
+        
+        console.log('DriverLogin - Code check result:', codeCheck);
+        
+        if (!codeCheck) {
+          toast.error(`Invalid driver code: ${trimmedCode}`);
+        } else {
+          toast.error('Invalid password');
+        }
         return;
       }
+
+      console.log('DriverLogin - Order found:', order);
 
       if (order.order_status === 'delivered') {
         toast.error('This order has already been delivered');
@@ -46,12 +70,14 @@ const DriverLogin = () => {
 
       // If driver info not filled yet, redirect to QR entry page
       if (!order.driver_name) {
-        navigate(`/driver/qr/${driverCode.toUpperCase()}`);
+        console.log('DriverLogin - Redirecting to QR entry for registration');
+        navigate(`/driver/qr/${trimmedCode}`);
       } else {
+        console.log('DriverLogin - Redirecting to dashboard');
         navigate(`/driver/dashboard/${order.tracking_code}`);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('DriverLogin - Login error:', error);
       toast.error('Failed to login. Please try again.');
     } finally {
       setLoading(false);
