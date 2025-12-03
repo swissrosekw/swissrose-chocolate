@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import CMSPage from "./pages/CMSPage";
 import MyOrders from "./pages/MyOrders";
 import Wishlist from "./pages/Wishlist";
+import CustomBouquet from "./pages/CustomBouquet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               <Route path="/page/:slug" element={<CMSPage />} />
+              <Route path="/custom-bouquet" element={<CustomBouquet />} />
               <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
               <Route path="/wishlist" element={<Wishlist />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
