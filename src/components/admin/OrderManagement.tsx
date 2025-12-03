@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
+import { QRCodeSVG } from "qrcode.react";
+import { Copy, QrCode, Link, Truck, User, Phone } from "lucide-react";
+import { generateAllTrackingCodes } from "@/lib/trackingUtils";
 
 type Order = Tables<"orders">;
 
@@ -17,6 +20,8 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [selectedOrderForQR, setSelectedOrderForQR] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -44,13 +49,37 @@ const OrderManagement = () => {
     setLoading(false);
   };
 
+  const generateTrackingCodesForOrder = async (orderId: string) => {
+    const codes = generateAllTrackingCodes();
+    
+    const { error } = await supabase
+      .from("orders")
+      .update(codes)
+      .eq("id", orderId);
+
+    if (error) {
+      console.error("Error generating tracking codes:", error);
+      throw error;
+    }
+
+    return codes;
+  };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
+    let updateData: any = { order_status: newStatus };
+
+    // Generate tracking codes when status changes to on_delivery
+    if (newStatus === "on_delivery" && !order.tracking_code) {
+      const codes = generateAllTrackingCodes();
+      updateData = { ...updateData, ...codes };
+    }
+
     const { error } = await supabase
       .from("orders")
-      .update({ order_status: newStatus })
+      .update(updateData)
       .eq("id", orderId);
 
     if (error) {
@@ -85,7 +114,7 @@ const OrderManagement = () => {
       
       fetchOrders();
       if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, order_status: newStatus });
+        setSelectedOrder({ ...selectedOrder, order_status: newStatus, ...updateData });
       }
     }
   };
@@ -139,6 +168,23 @@ const OrderManagement = () => {
     }
   };
 
+  const getBaseUrl = () => {
+    return window.location.origin;
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
+
+  const getDriverQRUrl = (driverCode: string) => {
+    return `${getBaseUrl()}/driver/qr/${driverCode}`;
+  };
+
+  const getCustomerTrackingUrl = (trackingCode: string) => {
+    return `${getBaseUrl()}/track/${trackingCode}`;
+  };
+
   return (
     <>
       <div className="space-y-4">
@@ -181,6 +227,7 @@ const OrderManagement = () => {
                       <TableHead>Phone</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Tracking</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -200,6 +247,23 @@ const OrderManagement = () => {
                           <Badge className={getStatusColor(order.order_status || "pending")}>
                             {order.order_status || "pending"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {order.tracking_code ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedOrderForQR(order);
+                                setQrDialogOpen(true);
+                              }}
+                            >
+                              <QrCode className="h-4 w-4 mr-1" />
+                              {order.tracking_code}
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {new Date(order.created_at || "").toLocaleDateString()}
@@ -248,6 +312,7 @@ const OrderManagement = () => {
         </Card>
       </div>
 
+      {/* Order Details Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -267,6 +332,61 @@ const OrderManagement = () => {
                   </Badge>
                 </div>
               </div>
+
+              {/* Tracking Section */}
+              {selectedOrder.tracking_code && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Tracking Information
+                  </h4>
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Customer Tracking Link</p>
+                        <p className="font-mono text-xs">{selectedOrder.tracking_code}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(getCustomerTrackingUrl(selectedOrder.tracking_code!), "Tracking link")}
+                      >
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copy Link
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Driver Code</p>
+                        <p className="font-mono">{selectedOrder.driver_code}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(`Code: ${selectedOrder.driver_code} | PIN: ${selectedOrder.driver_password}`, "Driver credentials")}
+                      >
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    {selectedOrder.driver_name && (
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-1">Driver Assigned</p>
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            {selectedOrder.driver_name}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-4 w-4" />
+                            {selectedOrder.driver_phone}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Customer Information</h4>
@@ -310,6 +430,100 @@ const OrderManagement = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5" />
+              Driver QR Code & Links
+            </DialogTitle>
+          </DialogHeader>
+          {selectedOrderForQR && selectedOrderForQR.driver_code && (
+            <div className="space-y-4">
+              {/* QR Code */}
+              <div className="flex justify-center p-4 bg-white rounded-lg">
+                <QRCodeSVG
+                  value={getDriverQRUrl(selectedOrderForQR.driver_code)}
+                  size={200}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              
+              <p className="text-sm text-center text-muted-foreground">
+                Driver scans this QR code to start delivery
+              </p>
+
+              {/* Driver Credentials */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Driver Code</p>
+                    <p className="font-mono font-bold">{selectedOrderForQR.driver_code}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(selectedOrderForQR.driver_code!, "Driver code")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Driver PIN</p>
+                    <p className="font-mono font-bold">{selectedOrderForQR.driver_password}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(selectedOrderForQR.driver_password!, "Driver PIN")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Links */}
+              <div className="space-y-2 border-t pt-4">
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => copyToClipboard(getCustomerTrackingUrl(selectedOrderForQR.tracking_code!), "Customer tracking link")}
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Copy Customer Tracking Link
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => copyToClipboard(getDriverQRUrl(selectedOrderForQR.driver_code!), "Driver QR link")}
+                >
+                  <QrCode className="h-4 w-4 mr-2" />
+                  Copy Driver QR Link
+                </Button>
+              </div>
+
+              {/* Driver Info if assigned */}
+              {selectedOrderForQR.driver_name && (
+                <div className="p-3 bg-primary/10 rounded-lg border-t">
+                  <p className="text-sm font-medium mb-1">Driver Assigned:</p>
+                  <p className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {selectedOrderForQR.driver_name}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    {selectedOrderForQR.driver_phone}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

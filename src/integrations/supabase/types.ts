@@ -74,11 +74,58 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_locations: {
+        Row: {
+          created_at: string | null
+          id: string
+          latitude: number
+          longitude: number
+          order_id: string
+          status: string | null
+          tracking_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          order_id: string
+          status?: string | null
+          tracking_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          order_id?: string
+          status?: string | null
+          tracking_code?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           address: string
           city: string
           created_at: string | null
+          delivered_at: string | null
+          delivery_photo_url: string | null
+          driver_code: string | null
+          driver_name: string | null
+          driver_password: string | null
+          driver_phone: string | null
           email: string | null
           full_name: string
           governorate: string
@@ -90,6 +137,7 @@ export type Database = {
           payment_status: string | null
           phone: string
           total_amount: number
+          tracking_code: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -97,6 +145,12 @@ export type Database = {
           address: string
           city: string
           created_at?: string | null
+          delivered_at?: string | null
+          delivery_photo_url?: string | null
+          driver_code?: string | null
+          driver_name?: string | null
+          driver_password?: string | null
+          driver_phone?: string | null
           email?: string | null
           full_name: string
           governorate: string
@@ -108,6 +162,7 @@ export type Database = {
           payment_status?: string | null
           phone: string
           total_amount: number
+          tracking_code?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -115,6 +170,12 @@ export type Database = {
           address?: string
           city?: string
           created_at?: string | null
+          delivered_at?: string | null
+          delivery_photo_url?: string | null
+          driver_code?: string | null
+          driver_name?: string | null
+          driver_password?: string | null
+          driver_phone?: string | null
           email?: string | null
           full_name?: string
           governorate?: string
@@ -126,6 +187,7 @@ export type Database = {
           payment_status?: string | null
           phone?: string
           total_amount?: number
+          tracking_code?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
