@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_pages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          meta_description: string | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string
