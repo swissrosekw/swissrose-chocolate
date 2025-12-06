@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, ShoppingBag } from "lucide-react";
+import { Search, ShoppingBag, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 
@@ -142,41 +142,60 @@ const Products = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative overflow-hidden aspect-square">
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
-                        {product.categories?.name}
-                      </span>
+                  <Link to={`/product/${product.id}`} className="block">
+                    <div className="relative overflow-hidden aspect-square">
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                          {product.categories?.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.name}</h3>
+                    <Link to={`/product/${product.id}`}>
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-1 hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
                     <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                       {product.description}
                     </p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-xl font-bold text-primary">
                         {product.price} KD
                       </span>
-                      <Button 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={() => addItem({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          image_url: product.image_url,
-                          category: product.categories?.name,
-                        })}
-                      >
-                        <ShoppingBag className="h-4 w-4" />
-                        Add to Cart
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          asChild
+                        >
+                          <Link to={`/product/${product.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="gap-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addItem({
+                              id: product.id,
+                              name: product.name,
+                              price: product.price,
+                              image_url: product.image_url,
+                              category: product.categories?.name,
+                            });
+                          }}
+                        >
+                          <ShoppingBag className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
