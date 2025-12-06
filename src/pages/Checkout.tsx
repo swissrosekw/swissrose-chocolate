@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -10,19 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { KUWAIT_LOCATIONS, Governorate } from "@/constants/kuwaitLocations";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, LogIn } from "lucide-react";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { settings: paymentSettings, isLoading: loadingSettings } = usePaymentSettings();
+  const [checkoutMode, setCheckoutMode] = useState<'choice' | 'guest' | 'authenticated'>(
+    user ? 'authenticated' : 'choice'
+  );
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -34,6 +37,14 @@ const Checkout = () => {
     paymentMethod: "cod",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Update checkout mode when user logs in
+  useEffect(() => {
+    if (user) {
+      setCheckoutMode('authenticated');
+      setFormData(prev => ({ ...prev, email: user.email || "" }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (paymentSettings?.cash_on_delivery_enabled) {
@@ -175,10 +186,76 @@ const Checkout = () => {
           </h1>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Checkout Mode Selection - Only show for non-authenticated users */}
+              {!user && checkoutMode === 'choice' && (
+                <Card>
+                  <CardHeader className="text-center">
+                    <CardTitle>How would you like to checkout?</CardTitle>
+                    <CardDescription>
+                      Choose to sign in for order tracking or continue as a guest
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-3 h-auto py-4"
+                      asChild
+                    >
+                      <Link to="/auth?redirect=/checkout">
+                        <LogIn className="h-5 w-5" />
+                        <div className="text-left">
+                          <div className="font-medium">Sign In to Your Account</div>
+                          <div className="text-sm text-muted-foreground">
+                            Track orders, save details, and view order history
+                          </div>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">or</span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      variant="secondary" 
+                      className="w-full justify-start gap-3 h-auto py-4"
+                      onClick={() => setCheckoutMode('guest')}
+                    >
+                      <User className="h-5 w-5" />
+                      <div className="text-left">
+                        <div className="font-medium">Continue as Guest</div>
+                        <div className="text-sm text-muted-foreground">
+                          Quick checkout without creating an account
+                        </div>
+                      </div>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Delivery Information Form - Show for authenticated users or guest mode */}
+              {(user || checkoutMode === 'guest') && (
               <Card>
                 <CardHeader>
                   <CardTitle>Delivery Information</CardTitle>
+                  {!user && checkoutMode === 'guest' && (
+                    <CardDescription>
+                      Checking out as guest.{' '}
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto" 
+                        onClick={() => setCheckoutMode('choice')}
+                      >
+                        Change
+                      </Button>
+                    </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -353,8 +430,8 @@ const Checkout = () => {
                   </form>
                 </CardContent>
               </Card>
+              )}
             </div>
-
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader>
